@@ -19,6 +19,10 @@ func main() {
             log.Println("emit:", msg)
             server.BroadcastTo("game","player", msg)
         })
+        so.On("spell", func(msg string) {
+            log.Println("emit:", msg)
+            server.BroadcastTo("game","spell", msg)
+        })
         so.On("disconnection", func() {
             log.Println("on disconnect")
         })
