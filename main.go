@@ -13,7 +13,6 @@ func main() {
     }
     server.On("connection", func(so socketio.Socket) {
         so.Join("game")
-        so.Emit("id",so.Id())
         log.Println("on connection")
         so.On("player", func(msg string) {
             log.Println(msg)
