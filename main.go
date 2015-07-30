@@ -13,18 +13,21 @@ func main() {
     }
     server.On("connection", func(so socketio.Socket) {
         so.Join("game")
-        so.Emit("id", so.Id())
+        so.Emit("id",so.Id())
         log.Println("on connection")
         so.On("player", func(msg string) {
-            log.Println("emit:", msg)
+            log.Println(msg)
             server.BroadcastTo("game","player", msg)
         })
+        so.On("death", func(msg string) {
+            server.BroadcastTo("game","death", msg)
+        })
         so.On("spell", func(msg string) {
-            log.Println("emit:", msg)
             server.BroadcastTo("game","spell", msg)
         })
         so.On("disconnection", func() {
             log.Println("on disconnect")
+            server.BroadcastTo("game","death", so.Id())
         })
     })
     server.On("error", func(so socketio.Socket, err error) {
@@ -33,7 +36,6 @@ func main() {
     c := cors.New(cors.Options{AllowedOrigins: []string{"*"},AllowCredentials: true,})
     handler := c.Handler(server)
     http.Handle("/socket.io/", handler)
-    http.Handle("/", http.FileServer(http.Dir("./Spell")))
     log.Println("Serving at localhost:5000...")
     log.Fatal(http.ListenAndServe(":5000", nil))
 }
