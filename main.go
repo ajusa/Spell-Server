@@ -1,42 +1,20 @@
 package main
+
 import (
 	"flag"
-    "log"
-    "net/http"
-    //"github.com/rs/cors"
-    "github.com/gorilla/websocket"
-    "fmt"
-    "encoding/json"
+	"log"
+	"net/http"
+	//"github.com/rs/cors"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
 )
 
-type Player struct {
-    X   int      `json:"x"`
-    Y 	int 	 `json:"y"`
-    Id	string	 `json:"id"`	
+type Thing struct {
+	Typeof string `json:"type"`
 }
-type Arrow struct {
-    X   int      `json:"x"`
-    Y 	int 	 `json:"y"`
-    Damage	int	 `json:"damage"` 	
-}
-type Response struct {
-    typeof	string	 `json:"type"`	
-    //data 	string   `json:"data"`		
-}
-var connections map[*websocket.Conn]bool
-var players map[*websocket.Conn]Player
 
-func sendAll(msg []byte, sender *websocket.Conn) {
-	var temp Player
-	json.Unmarshal(msg, &temp)
-	players[sender] = temp
-	for conn := range connections {
-		if conn != sender{
-		conn.WriteMessage(websocket.TextMessage, msg); 
-	}
-	}
-		log.Println(players)
-}
+var connections map[*websocket.Conn]bool
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	// Taken from gorilla's website
@@ -59,14 +37,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			conn.Close()
 			return
 		}
-		var data Response
+		var data Thing
 		json.Unmarshal(msg, &data)
-		if data.typeof == "player"{
-			//sendAll([]byte(data.data), conn)
-			}
+		if data.Typeof == "player" {
+			playerHandler([]byte(data.Typeof), conn)
+		}
 		log.Println(data)
 		log.Println(string(msg))
-		
+
 	}
 }
 
@@ -77,9 +55,7 @@ func main() {
 	connections = make(map[*websocket.Conn]bool)
 	players = make(map[*websocket.Conn]Player)
 
-	// handle all requests by serving a file of the same name
 	http.HandleFunc("/ws", wsHandler)
-
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", *port)
